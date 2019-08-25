@@ -1,0 +1,118 @@
+import 'package:deal/ui/about_ui/about_state.dart';
+import 'package:deal/ui/categories_ui/categories_state.dart';
+import 'package:deal/ui/post_ui/post_state.dart';
+import 'package:deal/ui/profile_ui/profile_state.dart';
+import 'package:deal/utils/appdata.dart';
+import 'package:deal/utils/values.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_advanced_networkimage/provider.dart';
+import 'package:flutter_advanced_networkimage/transition.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+class MainDrawer extends StatelessWidget {
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      elevation: 4.0,
+      child: ListView(
+        children: <Widget>[
+          DrawerHeader(
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(context, MaterialPageRoute(
+                        builder: (context) => ProfileScreen()));
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 10.0),
+                    child: Container(
+                      decoration: BoxDecoration(shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2.0)),
+                      padding: EdgeInsets.all(2.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(500.0),
+                        child: TransitionToImage(
+                          width: 60.0,
+                          image: AdvancedNetworkImage(
+                              "lnlk", useDiskCache: true,
+                              cacheRule: CacheRule(maxAge: Duration(days: 10))),
+                          loadingWidget: Image.asset(
+                            "assets/icon_profile_default.png", width: 60.0,),
+                          placeholder: Image.asset(
+                            "assets/icon_profile_default.png", width: 60.0,),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Text(
+                  "Hello ${AppData.User?.name?? "Geust"}",
+                  style: TextStyle(color: Colors.white,
+                      fontSize: 18.0,
+                      fontFamily: "SF",
+                      fontWeight: FontWeight.normal),
+                )
+              ],
+            ),
+            curve: Curves.easeInOut,
+            decoration: BoxDecoration(color: Values.primaryColor),
+          ),
+          ListTile(
+            title: Text("My Profile"),
+            leading: Icon(Icons.person, size: 25.0, color: Values.iconsColor,),
+          ),
+          ListTile(
+            onTap: () => Navigator.pop(context),
+            title: Text("Browse"),
+            leading: Icon(
+                FontAwesomeIcons.thLarge, size: 25.0, color: Values.iconsColor),
+          ),
+          ListTile(
+            title: Text("Post"),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => PostScreen()));
+            },
+            leading: Image.asset("assets/icon_post.png", width: 25.0),
+          ),
+          ListTile(
+            title: Text("Chat"),
+            leading: Image.asset("assets/icon_chat.png", width: 25.0),
+          ),
+          ListTile(
+              title: Text("Categories"),
+              leading: Icon(
+                  Icons.view_list, size: 25.0, color: Values.iconsColor),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => CategoriesScreen()));
+              }
+          ),
+          ListTile(
+              title: Text("About"),
+              leading: Icon(Icons.info, size: 25.0, color: Values.iconsColor),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => AboutScreen()));
+              }
+          ),
+          ListTile(
+            title: Text("Login"),
+            leading: Image.asset(
+              "assets/ic_login.png",
+              width: 25.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
