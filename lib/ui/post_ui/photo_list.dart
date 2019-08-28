@@ -5,12 +5,17 @@ import 'package:deal/utils/dimens.dart';
 import 'package:flutter/material.dart';
 
 class PhotosList extends StatefulWidget {
+  final Function(List<Map<String, dynamic>> _photos) onPhotosChanged;
+  final List<Map<String, dynamic>> photos;
+
+  const PhotosList({Key key,@required this.onPhotosChanged, this.photos}) : super(key: key);
   createState() => _PhotosListState();
 }
 
 class _PhotosListState extends State<PhotosList> {
   List<Map<String, dynamic>> _photos = List();
   List<Widget> _thumbs = List();
+  bool _isOldItemsAdded;
   Map<String, dynamic> _selectedPhoto = Map();
 
   @override
@@ -18,6 +23,8 @@ class _PhotosListState extends State<PhotosList> {
     // TODO: implement initState
     super.initState();
     _thumbs.add(_photo());
+    _isOldItemsAdded = false;
+
   }
 
   Widget _thumbnail(Map<String, dynamic> asset) {
@@ -74,6 +81,7 @@ class _PhotosListState extends State<PhotosList> {
                           _selectedPhoto = Map();
                           if (!photos.isEmpty) _selectedPhoto = photos[0];
                         });
+                        widget.onPhotosChanged(photos);
                       },
                     ))),
         child: DecoratedBox(
@@ -97,6 +105,18 @@ class _PhotosListState extends State<PhotosList> {
 
   @override
   Widget build(BuildContext context) {
+    print(widget.photos.length);
+    if (widget.photos != null && widget.photos.isNotEmpty && !_isOldItemsAdded) {
+      _isOldItemsAdded = true;
+      _photos
+        ..clear()
+        ..addAll(widget.photos);
+      _thumbs.clear();
+      widget.photos.forEach(
+              (asset) => _thumbs.add(_thumbnail(asset)));
+      _thumbs.add(_photo());
+      _selectedPhoto = Map();
+    }
     // TODO: implement build
     return Container(
       color: Colors.grey,

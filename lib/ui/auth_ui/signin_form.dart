@@ -1,6 +1,6 @@
 import 'package:deal/utils/appdata.dart';
 import 'package:deal/utils/values.dart';
-import 'package:deal/utils/web_service/auth_webservice.dart';
+import 'package:deal/utils/web_service/user_webservice.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -100,7 +100,7 @@ class _SigninForm extends State<SigninForm> {
                     if(_formKey.currentState.validate()){
                       _showLoggingInDialog();
                       _formKey.currentState.save();
-                      AuthWebService()..login(_mail, _passwd).then((user){
+                      UserWebService()..login(_mail, _passwd).then((user){
                         _isSigning = false;
                         Navigator.of(context).pop();
                         if (user != null){

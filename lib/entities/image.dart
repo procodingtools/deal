@@ -3,6 +3,8 @@ class ImageEntity {
   String _img, _thumb;
   double _height, _width;
 
+  ImageEntity();
+
   ImageEntity.formJson(Map<String, dynamic> data) {
     _id = data['id'];
     _img = data['image'];

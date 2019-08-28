@@ -20,43 +20,53 @@ class ProductDetailsEntity {
   CategoryEntity _subCat;
   List<ImageEntity> _images;
   UserEntity _user;
+  String _img;
+  String _thumb;
 
-  ProductDetailsEntity.fromJson(Map<String, dynamic> data){
-        _id = data['id'];
-        _categoryId = data['category_id'];
-        _userId = data['user_id'];
-        _soldToUser = data['sold_user_id'];
-        _subCategory = data['sub_category_id'];
-        _title = data['title'];
-        _desc = data['desc'];
-        _price = data['price'];
-        _currSymbol = data['currency_symbol'];
-        _location = data['location'];
-        _lat = data['latitude'];
-        _lng = data['longitude'];
-        _country = data['country'];
-        _state = data['sstate'];
-        _city = data['city'];
-        _created = DateTime.parse(data['created_at']);
-        _updated = DateTime.parse(data['updated_at']);
-        _isSold = data['is_sold'] == 1;
-        _isFree = data['is_free'] == 1;
-        _isFav = data['is_favourite'] == 1;
-        _cat = CategoryEntity(data: data['category']);
-        _subCat = CategoryEntity(data: data['sub_category']);
-        _user = UserEntity.fromJson(data['user']);
-        _images = List();
-        for (final img in data['images'])
-          images.add(ImageEntity.formJson(img));
-      }
+  ProductDetailsEntity();
 
-
-
+  ProductDetailsEntity.fromJson(Map<String, dynamic> data) {
+    _id = data['id'];
+    _categoryId = data['category_id'] ?? null;
+    _userId = data['user_id'] ?? null;
+    _soldToUser = data['sold_user_id'] ?? null;
+    _subCategory = data['sub_category_id'] ?? null;
+    _title = data['title'] ?? null;
+    _desc = data['desc'] ?? null;
+    _price = data['price'] ?? null;
+    _currSymbol = data['currency_symbol'] ?? null;
+    _location = data['location'] ?? null;
+    _lat = data['latitude'] ?? null;
+    _lng = data['longitude'] ?? null;
+    _country = data['country'] ?? null;
+    _state = data['sstate'] ?? null;
+    _city = data['city'] ?? null;
+    _created = DateTime.parse(data['created_at'] ?? DateTime.now().toString());
+    _updated = DateTime.parse(data['updated_at'] ?? DateTime.now().toString());
+    _isSold = data['is_sold'] == 1;
+    _isFree = data['is_free'] == 1;
+    _isFav = data['is_favourite'] == 1;
+    _cat = CategoryEntity(data: data['category'] ?? null);
+    _subCat = CategoryEntity(data: data['sub_category'] ?? null);
+    _user = data.containsKey("user") ? UserEntity.fromJson(data['user']) : null;
+    _images = List();
+    if (data.containsKey('images'))
+      for (final img in data['images'])
+        images.add(ImageEntity.formJson(img) ?? null);
+    _img = data['image'] ?? null;
+    _thumb = data['thumb'] ?? null;
+  }
 
   UserEntity get user => _user;
 
   set user(UserEntity value) {
     _user = value;
+  }
+
+  String get img => _img;
+
+  set img(String value) {
+    _img = value;
   }
 
   List<ImageEntity> get images => _images;
@@ -70,7 +80,6 @@ class ProductDetailsEntity {
   set cat(CategoryEntity value) {
     _cat = value;
   }
-
 
   CategoryEntity get subCat => _subCat;
 
@@ -196,6 +205,12 @@ class ProductDetailsEntity {
 
   set id(int value) {
     _id = value;
+  }
+
+  String get thumb => _thumb;
+
+  set thumb(String value) {
+    _thumb = value;
   }
 
 

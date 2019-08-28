@@ -1,21 +1,22 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:date_format/date_format.dart';
 import 'package:deal/entities/image.dart';
 import 'package:deal/entities/product.dart';
 import 'package:deal/entities/product_details.dart';
 import 'package:deal/ui/common/shimmer_text.dart';
+import 'package:deal/ui/dialogs/auth/auth_dialog.dart';
 import 'package:deal/ui/item_details_ui/details_buttons.dart';
-import 'package:deal/ui/item_details_ui/profile_card.dart';
+import 'package:deal/ui/common/profile_card.dart';
+import 'package:deal/ui/item_details_ui/flex_bar.dart';
+import 'package:deal/ui/post_ui/post_state.dart';
+import 'package:deal/ui/report_ui/report_state.dart';
 import 'package:deal/utils/appdata.dart';
 import 'package:deal/utils/dimens.dart';
 import 'package:deal/utils/values.dart';
 import 'package:deal/utils/web_service/products_webservice.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_advanced_networkimage/provider.dart';
-import 'package:flutter_advanced_networkimage/transition.dart';
-import 'package:flutter_multi_carousel/carousel.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:sliver_fab/sliver_fab.dart';
 
 class ItemDetailsScreen extends StatefulWidget {
@@ -31,24 +32,26 @@ class ItemDetailsScreen extends StatefulWidget {
 
 class _ItemDetailsState extends State<ItemDetailsScreen> {
   final double _width = Dimens.Width, _height = Dimens.Height;
-  double _distance=.0;
+  double _distance = .0;
+
+  bool _isMine;
 
   List<ImageEntity> _images;
 
   ProductDetailsEntity _details;
 
+  String _saveString;
+  IconData _saveIcon;
+
   bool _isLoading = true;
 
-  final List<_Button> _buttons = [
-    _Button("Save", Icons.favorite_border, Values.primaryColor),
-    _Button("Report", Icons.flag, Values.reportColor),
-    _Button("Share", Icons.share, Values.shareColor)
-  ];
+  List<_Button> _buttons;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _isMine = widget.product.userId == AppData.User?.id ?? 0;
     _images = [
       ImageEntity.formJson({
         "id": 0,
@@ -59,20 +62,91 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
       })
     ];
 
+    _saveString = (_details?.isFav ?? true) ? "Save" : "Saved";
+    _saveIcon =
+        (_details?.isFav ?? true) ? Icons.favorite_border : Icons.favorite;
+
+    _initBottomButtons();
+
     ProductWebService().getProductDetails(widget.product.id).then((details) {
       setState(() {
         _details = details;
         _details.images.removeAt(0);
         _images.addAll(_details.images);
         _isLoading = false;
-        Geolocator().distanceBetween(double.parse(AppData.Latitude), double.parse(AppData.Latitude), double.parse(_details.lat), double.parse(_details.lng)).then((distance){
+        _initBottomButtons();
+        Geolocator()
+            .distanceBetween(
+                double.parse(AppData.Latitude),
+                double.parse(AppData.Latitude),
+                double.parse(_details.lat),
+                double.parse(_details.lng))
+            .then((distance) {
           setState(() {
-            _distance = distance*0.000621371;
+            _distance = distance * 0.000621371;
           });
         });
       });
     });
+  }
 
+  _initBottomButtons() {
+    setState(() {
+      if (_details != null) {
+        _saveString = !_details.isFav ? "Save" : "Saved";
+        _saveIcon = !_details.isFav ? Icons.favorite_border : Icons.favorite;
+      }
+      _buttons = [
+        _Button(
+          _saveString,
+          _saveIcon,
+          Values.primaryColor,
+          _onSaveClicked,
+        ),
+        _Button(
+          "Report",
+          Icons.flag,
+          Values.reportColor,
+          () {
+            if (AppData.User == null) {
+              showDialog(
+                  context: context,
+                  builder: (context) => AuthDialog(
+                        loginStatus: (status) => print(status),
+                      ));
+            } else
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ReportScreen(
+                            details: _details,
+                          )));
+          },
+        ),
+        _Button(
+          "Share",
+          Icons.share,
+          Values.shareColor,
+          () => print('hi'),
+        )
+      ];
+    });
+  }
+
+  void _onSaveClicked() {
+    if (AppData.User == null) {
+      showDialog(
+          context: context,
+          builder: (context) => AuthDialog(
+                loginStatus: (status) => print(status),
+              ));
+    } else if (_details != null) {
+      setState(() {
+        _details.isFav = !_details.isFav;
+      });
+      ProductWebService().saveProduct(_details.id);
+      _initBottomButtons();
+    }
   }
 
   @override
@@ -81,17 +155,50 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
     return Scaffold(
         body: SliverFab(
       expandedHeight: _height * .45,
-      floatingWidget: FloatingActionButton(
-        backgroundColor: Values.primaryColor,
-        onPressed: () => print("hello"),
-        child: Icon(
-          FontAwesomeIcons.solidCommentAlt,
-          color: Colors.white,
-        ),
-      ),
+      floatingWidget: !_isMine
+          ? FloatingActionButton(
+              backgroundColor: Values.primaryColor,
+              onPressed: () {
+                if (AppData.User == null) {
+                  showDialog(
+                      context: context,
+                      builder: (context) => AuthDialog(
+                            loginStatus: (status) => print(status),
+                          ));
+                } else
+                  print("hello");
+              },
+              child: Icon(
+                FontAwesomeIcons.solidCommentAlt,
+                color: Colors.white,
+              ),
+            )
+          : Container(),
       floatingPosition: FloatingPosition(right: 20.0),
       slivers: <Widget>[
         SliverAppBar(
+          actions: <Widget>[
+            _isMine
+                ? InkWell(
+                    onTap: () => {
+                      if (_details != null)
+                        {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => PostScreen(
+                                        details: _details,
+                                      )))
+                        }
+                    },
+                    child: Icon(
+                      Icons.create,
+                      color: Values.primaryColor,
+                      size: 30.0,
+                    ),
+                  )
+                : Container()
+          ],
           leading: Padding(
             padding: const EdgeInsets.all(7.0),
             child: InkWell(
@@ -108,86 +215,10 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
           expandedHeight: _height * .45,
           floating: false,
           backgroundColor: Colors.white,
-          flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.parallax,
-              background: Stack(
-                children: <Widget>[
-                  Align(
-                    alignment: Alignment.center,
-                    child: Hero(
-                      tag: "item${widget.product.id}",
-                      child: Carousel(
-                        height: _height * .45,
-                        width: double.infinity,
-                        indicatorType: "dot",
-                        type: "simple",
-                        axis: Axis.horizontal,
-                        activeIndicatorColor: Values.primaryColor,
-                        children: _images.map((img) {
-                          return Padding(
-                            padding: EdgeInsets.only(top: 5.0),
-                            child: TransitionToImage(
-                              image: AdvancedNetworkImage(img.thumb,
-                                  useDiskCache: true),
-                              loadingWidget: Container(
-                                width: double.infinity,
-                                height: _height * .45,
-                                color: Colors.grey,
-                                child: Shimmer.fromColors(
-                                    child: Container(
-                                      child: Center(
-                                        child: Icon(
-                                          Icons.image,
-                                          color: Colors.white,
-                                          size: _width * .6,
-                                        ),
-                                      ),
-                                    ),
-                                    baseColor: Colors.grey.withOpacity(.4),
-                                    highlightColor: Colors.white),
-                              ),
-                              width: double.infinity,
-                              fit: BoxFit.scaleDown,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Padding(
-                        padding: EdgeInsets.only(bottom: 50.0),
-                        child: Container(
-                          width: "\$${widget.product.price}".length * 15.0,
-                          height: _height * .1,
-                          padding: EdgeInsets.all(0.0),
-                          child: Stack(
-                            children: <Widget>[
-                              Center(
-                                child: Image.asset(
-                                  "assets/icon_price_badge.png",
-                                  height: _height * .06,
-                                  width:
-                                      "\$${widget.product.price}".length * 15.0,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              Center(
-                                child: Text(
-                                  "\$${widget.product.price}",
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17.0),
-                                ),
-                              )
-                            ],
-                          ),
-                        )),
-                  )
-                ],
-              )),
+          flexibleSpace: DetailsFlexBar(
+            product: widget.product,
+            images: _images,
+          ),
         ),
         SliverList(
             delegate: SliverChildListDelegate([
@@ -241,16 +272,19 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
                       child: _locationWidget()),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 150.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: _buttons.map((btn) {
-                        return DetailsButton(
-                          color: btn.color,
-                          text: btn.text,
-                          icon: btn.icon,
-                        );
-                      }).toList(),
-                    ),
+                    child: !_isMine
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: _buttons.map((btn) {
+                              return DetailsButton(
+                                color: btn.color,
+                                text: btn.text,
+                                icon: btn.icon,
+                                method: btn.method,
+                              );
+                            }).toList(),
+                          )
+                        : Container(),
                   )
                 ],
               ),
@@ -274,10 +308,12 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
                 height: 15.0,
               ),
         Expanded(child: Container()),
-        Text(
-          "10-Aug-2019",
-          style: TextStyle(color: Colors.grey),
-        )
+        _isLoading
+            ? ShimmerText()
+            : Text(
+                formatDate(_details.created, [dd, "-", M, "-", yyyy]),
+                style: TextStyle(color: Colors.grey),
+              )
       ],
     );
   }
@@ -307,11 +343,11 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
                   ),
                   !_isLoading
                       ? Container(
-                          width: _width*.8,
+                          width: _width * .8,
                           child: AutoSizeText(
-                          _details.location,
-                          maxLines: 2,
-                        ))
+                            _details.location,
+                            maxLines: 2,
+                          ))
                       : ShimmerText(
                           width: 200.0,
                         ),
@@ -329,6 +365,8 @@ class _Button {
   final String text;
   final IconData icon;
   final Color color;
+  final Function method;
+  final isSave;
 
-  _Button(this.text, this.icon, this.color);
+  _Button(this.text, this.icon, this.color, this.method, {this.isSave = false});
 }

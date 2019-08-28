@@ -5,14 +5,15 @@ class DetailsButton extends StatelessWidget{
   final Color color;
   final String text;
   final IconData icon;
+  final Function method;
 
-  const DetailsButton({Key key, this.color, this.text, this.icon}) : super(key: key);
+  const DetailsButton({Key key, this.color, this.text, this.icon, this.method,}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
     return RaisedButton(
-      onPressed: () => print('gg'),
+      onPressed: method,
       splashColor: Colors.white54,
       color: color,
       child: Padding(

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:deal/utils/appdata.dart';
 
 class UserEntity {
@@ -10,6 +12,7 @@ class UserEntity {
   String _userId = "";
   String _fbId = "";
   String _fullName = "";
+  DateTime _joinDate = DateTime(0);
   String _mobile = "";
   String _profilePicThumb = "";
   String _profilePicOriginal = "";
@@ -20,25 +23,45 @@ class UserEntity {
 
   UserEntity({Map<String, dynamic> data}) {
     if (data != null) {
-      _id = data['id'];
-      _name = data['name'];
-      _email = data['email'];
-      _mobile = data['mobile_no'];
-      _profilePicThumb = data['profile_thumb'];
-      _profilePicOriginal = data['profile'];
+      _id = data['id']??null;
+      _name = data['name']??null;
+      _email = data['email']??null;
+      _mobile = data['mobile_no']??null;
+      _profilePicThumb = data['profile_thumb']??null;
+      _profilePicOriginal = data['profile']??null;
       _rating = data['ratting']+.0;
+      _joinDate = DateTime(0);
+      if (data.containsKey("joining_date"))
+        _joinDate = DateTime.parse(data['joining_date']);
       //_searchHistory = data['search_history'];
-      _token = "Bearer " + data['token'];
-      AppData.Toekn = _token;
+      if (data.containsKey("token")) {
+        _token = "Bearer " + data['token'];
+        AppData.Toekn = _token;
+      }
     }
   }
 
   UserEntity.fromJson(Map<String, dynamic> data)
-      : _id = data['id'],
-        _name = data['name'],
-        _email = data['email'],
-        _thumb = data['profile_thumb'],
-        _rating = data['ratting'] + .0;
+      : _id = data['id']??null,
+        _name = data['name']??null,
+        _email = data['email']??null,
+        _thumb = data['profile_thumb']??null,
+        _rating = data.containsKey("ratting") ? data['ratting'] + .0 : .0;
+
+  String toJson(){
+    Map<String, dynamic> data = Map();
+
+    data['id'] = _id;
+    data['name'] = _name;
+    data['email'] = _email;
+    data['mobile_no'] = _mobile;
+    data['profile_thumb'] = _profilePicThumb;
+    data['profile'] = _profilePicOriginal;
+    data['ratting'] = _rating;
+    data['token'] = _token;
+    AppData.Toekn = _token;
+    return json.encode(data);
+  }
 
   get thumb => _thumb;
 
@@ -140,6 +163,12 @@ class UserEntity {
 
   set status(String value) {
     _status = value;
+  }
+
+  DateTime get joinDate => _joinDate;
+
+  set joinDate(DateTime value) {
+    _joinDate = value;
   }
 
 

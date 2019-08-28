@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_map_location_picker/google_map_location_picker.dart';
 
 class LocationPickerScreen extends StatelessWidget {
-  final String _apiKey = "AIzaSyDdOCZD9NHB5iLgvjNEGXYXWRnfMyXLJ0c";
+  final String _apiKey = "AIzaSyBaZsFdNzfRESf6rIYYUVN4pvmSSZn4wbw";
   final Function(LocationResult location) onLocationChanged;
 
   const LocationPickerScreen({Key key, @required this.onLocationChanged}) : assert(onLocationChanged != null), super(key: key);

@@ -9,7 +9,7 @@ import 'package:flutter_advanced_networkimage/transition.dart';
 import 'package:shimmer/shimmer.dart';
 
 class CategoriesScreen extends StatefulWidget {
-  final Function(CategoryEntity category) catgoryCallback;
+  final Function(CategoryEntity category, CategoryEntity subCat) catgoryCallback;
 
   const CategoriesScreen({Key key, this.catgoryCallback})
       : super(key: key);
@@ -22,7 +22,7 @@ class _CategoriesState extends State<CategoriesScreen>{
 
   List<CategoryEntity> _categories = List.from(AppData.Categories);
   bool _isSetToSub = false;
-  CategoryEntity _mainCat;
+  CategoryEntity _mainCat, _subCat;
 
 
   @override
@@ -50,12 +50,12 @@ class _CategoriesState extends State<CategoriesScreen>{
                   if (!_isSetToSub){
                     _mainCat = cat;
                   } else {
-                    _mainCat.subCategory = List.from([cat]);
+                    _subCat = cat;
                   }
 
                  if(cat.subCategory == null || cat.subCategory.isEmpty){
                    if (widget.catgoryCallback != null)
-                     widget.catgoryCallback(_mainCat);
+                     widget.catgoryCallback(_mainCat, _subCat);
                    Navigator.pop(context);
                  }else
                    setState(() {

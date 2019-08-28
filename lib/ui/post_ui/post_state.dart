@@ -1,36 +1,69 @@
+import 'dart:io';
+
 import 'package:deal/entities/category.dart';
+import 'package:deal/entities/image.dart';
+import 'package:deal/entities/product_details.dart';
 import 'package:deal/ui/categories_ui/categories_state.dart';
 import 'package:deal/ui/location_picker/location_picker_state.dart';
 import 'package:deal/ui/post_ui/photo_list.dart';
+import 'package:deal/utils/appdata.dart';
 import 'package:deal/utils/dimens.dart';
 import 'package:deal/utils/values.dart';
+import 'package:deal/utils/web_service/products_webservice.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_map_location_picker/google_map_location_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 class PostScreen extends StatefulWidget {
+  final ProductDetailsEntity details;
+
+  const PostScreen({Key key, this.details}) : super(key: key);
+
   createState() => _PostState();
 }
 
 class _PostState extends State<PostScreen> {
-  final _width = Dimens.Width, _height = Dimens.Height;
-  final _formKey = GlobalKey<FormState>();
+
+  final _width = Dimens.Width,
+      _height = Dimens.Height;
+  final _formKey = GlobalKey<FormState>(),
+      _scaffoldKey = GlobalKey<ScaffoldState>();
   final _titleFocusNode = FocusNode(),
       _descFocusNode = FocusNode(),
       _priceFocusNode = FocusNode();
-  String _title, _desc, _price, _adr, _country, _state, _city;
+  String _title, _desc, _price, _adr, _country, _state, _city, _location;
   double _lat, _lng;
-  CategoryEntity _cat;
+  CategoryEntity _cat, _subCat;
 
-  setOnCategoryListener(CategoryEntity category) =>
-      setState(() => _cat = category);
+  bool _isUploading = false;
 
-  _setOnLocationListener(LocationResult location){
+  List<Map<String, dynamic>> _photos = List();
+
+  _setOnCategoryListener(CategoryEntity category, CategoryEntity subCat) =>
+      setState(() {
+        _cat = category;
+        _subCat = subCat;
+      });
+
+  _setOnLocationListener(LocationResult location) {
     _country = "Country";
     _state = "State";
-    _city = "City";
+    _city = "Country";
+    _location = "Location";
     _lat = location.latLng.latitude;
     _lng = location.latLng.longitude;
+    _state = location.state ?? location.city ?? "State";
+    _city = location.city ?? "City";
+    _country = location.country ?? "Country";
+    _location = location.formattedAdr ?? 'Location';
+  }
+
+  _setOnPhotosListener(List<Map<String, dynamic>> photos) {
+    _photos
+      ..clear()
+      ..addAll(photos);
   }
 
   @override
@@ -40,21 +73,56 @@ class _PostState extends State<PostScreen> {
     _country = "Country";
     _state = "State";
     _city = "City";
-  }
+    _location = "Location";
 
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Values.primaryColor,
-        title: Text("Post"),
-      ),
-      body: SingleChildScrollView(
+    if (widget.details != null) {
+      _country = widget.details.country;
+      _city = widget.details.city;
+      _state = widget.details.state;
+
+      getTemporaryDirectory().then((dir) {
+        String tmpDir = dir.path;
+        _fetchPhotos(tmpDir);
+      });
+  }
+}
+
+_fetchPhotos(String tmpDir) async {
+  for(final img in widget.details.images) {
+    print('entred');
+    String path = "$tmpDir/${img.thumb.substring(img.thumb.lastIndexOf('/') + 1)}";
+    final request = await HttpClient().getUrl(Uri.parse(img.thumb));
+    final response = await request.close();
+    await response.pipe(new File(path).openWrite());
+    _photos.add({'path': path});
+    print("added");
+  };
+  print('all added');
+  setState(() {
+    print('allAdded');
+  });
+}
+
+@override
+Widget build(BuildContext context) {
+  // TODO: implement build
+  return Scaffold(
+    key: _scaffoldKey,
+    appBar: AppBar(
+      backgroundColor: Values.primaryColor,
+      title: Text("Post"),
+    ),
+    body: WillPopScope(
+      onWillPop: () =>
+      _isUploading ? Future.value(false) : Future.value(true),
+      child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            PhotosList(),
+            PhotosList(
+              onPhotosChanged: _setOnPhotosListener,
+              photos: _photos,
+            ),
             Form(
               key: _formKey,
               child: Column(
@@ -107,7 +175,7 @@ class _PostState extends State<PostScreen> {
                     child: TextFormField(
                       decoration: Values.TextFieldDecoration("Price"),
                       keyboardType:
-                          TextInputType.numberWithOptions(signed: false),
+                      TextInputType.numberWithOptions(signed: false),
                       focusNode: _priceFocusNode,
                       textInputAction: TextInputAction.done,
                       inputFormatters: [
@@ -117,10 +185,10 @@ class _PostState extends State<PostScreen> {
                         return txt.isEmpty
                             ? "Please fill with a valid price"
                             : txt != "Free"
-                                ? double.parse(txt) <= 0
-                                    ? "Please fill with a valid price"
-                                    : null
-                                : "Please fill with a valid price";
+                            ? double.parse(txt) <= 0
+                            ? "Please fill with a valid price"
+                            : null
+                            : "Please fill with a valid price";
                       },
                       onSaved: (txt) => _price = txt,
                     ),
@@ -139,9 +207,16 @@ class _PostState extends State<PostScreen> {
                   _button(
                       title: _cat == null
                           ? "Category"
-                          : "${_cat.label}${_cat.subCategory == null || _cat.subCategory.isEmpty ? "" : " > " + _cat.subCategory[0].label}",
-                      navigateTo: CategoriesScreen(catgoryCallback: setOnCategoryListener,)),
-                  _button(title: "Location", navigateTo: LocationPickerScreen(onLocationChanged: _setOnLocationListener,)),
+                          : "${_cat.label}${_subCat == null ? "" : " > " +
+                          _subCat.label}",
+                      navigateTo: CategoriesScreen(
+                        catgoryCallback: _setOnCategoryListener,
+                      )),
+                  _button(
+                      title: _location,
+                      navigateTo: LocationPickerScreen(
+                        onLocationChanged: _setOnLocationListener,
+                      )),
                   _button(
                     title: _country,
                   ),
@@ -158,62 +233,126 @@ class _PostState extends State<PostScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _button({String title, Widget navigateTo}) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 30.0),
-      child: RaisedButton(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        elevation: .0,
-        onPressed: () {
-          if (navigateTo != null)
-            Navigator.push(
-                context, MaterialPageRoute(builder: (context) => navigateTo));
-          else
-            return Navigator.push(context, MaterialPageRoute(builder: (context) => navigateTo));
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 15.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                title,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              Expanded(child: Container()),
-              navigateTo != null
-                  ? Icon(
-                      Icons.play_arrow,
-                      color: Colors.black,
-                      size: 15.0,
-                    )
-                  : Container()
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _postBtn() {
-    return MaterialButton(
+Widget _button({String title, Widget navigateTo}) {
+  return Padding(
+    padding: EdgeInsets.only(bottom: 30.0),
+    child: RaisedButton(
+      shape:
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      elevation: .0,
       onPressed: () {
-        _formKey.currentState.validate();
+        if (navigateTo != null)
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => navigateTo));
+        else
+          return Navigator.push(
+              context, MaterialPageRoute(builder: (context) => navigateTo));
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20.0),
-        child: Text(
-          "Post".toUpperCase(),
-          style: TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15.0),
+        padding: const EdgeInsets.symmetric(vertical: 15.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            LimitedBox(
+              maxWidth: _width * .7,
+              child: Text(
+                title ?? "",
+                softWrap: false,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Expanded(child: Container()),
+            navigateTo != null
+                ? Icon(
+              Icons.play_arrow,
+              color: Colors.black,
+              size: 15.0,
+            )
+                : Container()
+          ],
         ),
       ),
-      color: Values.primaryColor,
-      minWidth: _width,
-    );
-  }
+    ),
+  );
 }
+
+Widget _postBtn() {
+  return MaterialButton(
+    onPressed: () {
+      if (_cat == null)
+        _scaffoldKey.currentState
+            .showSnackBar(_snackBar("Please select category"));
+      else if (_location == 'Location')
+        _scaffoldKey.currentState
+            .showSnackBar(_snackBar("Please select location"));
+
+      if (!_isUploading &&
+          _formKey.currentState.validate() &&
+          _cat != null &&
+          _location != "Location") {
+        setState(() {
+          _isUploading = true;
+        });
+        _formKey.currentState.save();
+        ProductDetailsEntity product = ProductDetailsEntity();
+        product.subCat = _subCat;
+        product.cat = _cat;
+        product.title = _title;
+        product.desc = _desc;
+        product.images = _photos.map((photo) {
+          return ImageEntity()
+            ..img = photo['path'];
+        }).toList();
+        product.price = _price;
+        product.lat = AppData.Latitude;
+        product.lng = AppData.Longitude;
+        product.location = _location;
+        product.city = _city == 'City' ? "" : _city;
+        product.country = _country == 'Country' ? "" : _country;
+        product.state = _state == "State" ? "" : _country;
+
+        ProductWebService().postProduct(product).then((val) {
+          setState(() {
+            _isUploading = false;
+            Navigator.pop(context);
+          });
+        });
+      }
+    },
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20.0),
+      child: _isUploading
+          ? Theme(
+          data: ThemeData(accentColor: Colors.white),
+          child: CircularProgressIndicator())
+          : Text(
+        "Post".toUpperCase(),
+        style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 15.0),
+      ),
+    ),
+    color: Values.primaryColor,
+    minWidth: _width,
+  );
+}
+
+SnackBar _snackBar(String text) {
+  return SnackBar(
+    content: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(text),
+    ),
+    action: SnackBarAction(
+      label: "Dismiss",
+      onPressed: () => _scaffoldKey.currentState.hideCurrentSnackBar(),
+    ),
+  );
+}}
