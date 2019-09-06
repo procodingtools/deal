@@ -67,7 +67,7 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
 
     _saveString = (_details?.isFav ?? true) ? "Save" : "Saved";
     _saveIcon =
-        (_details?.isFav ?? true) ? Icons.favorite_border : Icons.favorite;
+    (_details?.isFav ?? true) ? Icons.favorite_border : Icons.favorite;
 
     _initBottomButtons();
 
@@ -75,16 +75,16 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
       setState(() {
         _details = details;
         _isMine = details.user.id == AppData.User?.id ?? 0;
-        _details.images.removeAt(0);
+        _images.clear();
         _images.addAll(_details.images);
         _isLoading = false;
         _initBottomButtons();
         Geolocator()
             .distanceBetween(
-                double.parse(AppData.Latitude),
-                double.parse(AppData.Latitude),
-                double.parse(_details.lat),
-                double.parse(_details.lng))
+            double.parse(AppData.Latitude),
+            double.parse(AppData.Latitude),
+            double.parse(_details.lat),
+            double.parse(_details.lng))
             .then((distance) {
           setState(() {
             _distance = distance * 0.000621371;

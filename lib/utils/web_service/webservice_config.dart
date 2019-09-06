@@ -23,6 +23,7 @@ class WebserviceConfig {
       FB_LOGIN = "social-login",
       GET_NOTIFICATIONS = _BASE_URL + "user/notification",
       DELETE_PRODUCT = _BASE_URL + "post/delete/",
+      UPDATE_PRODUCT = _BASE_URL + "post/update/",
       BUYERS_LIST = _BASE_URL + "post/chat/user/",
       RATE = _BASE_URL + "post/sold/",
       REPORT = _BASE_URL + "post/report";

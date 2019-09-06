@@ -110,6 +110,40 @@ class ProductWebService extends WebserviceConfig {
     return;
   }
 
+
+  Future<bool> updateProduct(ProductDetailsEntity product) async{
+    FormData formData = FormData.from({
+      'title': product.title,
+      "address": product.location,
+      "description": product.desc,
+      "price": product.price,
+      "symbol": "\$",
+      "category_id": product.cat.id,
+      "country_id": product.country,
+      "city_id": product.city,
+      "state": product.state,
+      "latitude": product.lat,
+      "longitude": product.lng,
+      "post_id": product.id,
+    });
+
+    if (product.subCategory != null)
+      formData.add("sub_category_id", product.subCat.id);
+
+    for (int i = 0; i < product.images.length; i++)
+      formData.add("files[$i]", UploadFileInfo(File(product.images[i].img), "${DateTime.now().millisecond}.jpg"));
+
+    print("files 0: ${formData['files[0]']}");
+
+    try {
+      await dio.post("${WebserviceConfig.UPDATE_PRODUCT}${product.id}", data: formData);
+      return true;
+    }catch(e){
+      print((e as DioError).response);
+      return false;
+    }
+  }
+
   Future<List<UserEntity>> getBuyersList(int productId) async {
 
     final response = await dio.get("${WebserviceConfig.BUYERS_LIST}$productId");

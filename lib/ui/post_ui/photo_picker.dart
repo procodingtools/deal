@@ -332,9 +332,10 @@ class _PhotoPickerState extends State<PhotoPickerScreen> {
                                   color: Colors.white54,
                                   padding: EdgeInsets.all(2.0),
                                   child: Icon(Icons.clear)),
-                              onTap: () =>
-                                  setState(() =>
-                                      _selectedPhotos.remove(asset))))
+                              onTap: () {
+                                _removeSelectedPhoto(asset);
+                                widget.onPhotosSectectedChaned(_selectedPhotos);
+                              }))
                     ],
                   ));
             }).toList(),

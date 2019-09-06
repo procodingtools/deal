@@ -4,11 +4,12 @@ import 'package:deal/ui/post_ui/photo_picker.dart';
 import 'package:deal/utils/dimens.dart';
 import 'package:flutter/material.dart';
 
-class PhotosList extends StatefulWidget {
+class PhotosList extends StatefulWidget{
   final Function(List<Map<String, dynamic>> _photos) onPhotosChanged;
   final List<Map<String, dynamic>> photos;
 
-  const PhotosList({Key key,@required this.onPhotosChanged, this.photos}) : super(key: key);
+  const PhotosList({Key key, this.onPhotosChanged, this.photos}) : super(key: key);
+
   createState() => _PhotosListState();
 }
 
@@ -24,7 +25,6 @@ class _PhotosListState extends State<PhotosList> {
     super.initState();
     _thumbs.add(_photo());
     _isOldItemsAdded = false;
-
   }
 
   Widget _thumbnail(Map<String, dynamic> asset) {
@@ -105,6 +105,7 @@ class _PhotosListState extends State<PhotosList> {
 
   @override
   Widget build(BuildContext context) {
+
     print(widget.photos.length);
     if (widget.photos != null && widget.photos.isNotEmpty && !_isOldItemsAdded) {
       _isOldItemsAdded = true;
@@ -117,6 +118,7 @@ class _PhotosListState extends State<PhotosList> {
       _thumbs.add(_photo());
       _selectedPhoto = Map();
     }
+
     // TODO: implement build
     return Container(
       color: Colors.grey,
