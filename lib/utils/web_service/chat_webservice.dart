@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:deal/entities/chat_entity.dart';
 import 'package:deal/entities/chat_message.dart';
 import 'package:deal/utils/appdata.dart';

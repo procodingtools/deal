@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:deal/entities/category.dart';
 import 'package:deal/utils/appdata.dart';
 import 'package:deal/utils/dimens.dart';

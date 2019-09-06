@@ -16,6 +16,15 @@ class WebserviceConfig {
       SEND_MESSAGE = _BASE_URL + "openfire/send-notification",
       PRODUCTS_HISTORY = _BASE_URL + "post/user",
       SAVE_PRODUCT = _BASE_URL + "post/save",
+      GET_SAVED_PRODUCTS = _BASE_URL + "post/save/list",
+      UPDATE_PROFILE = _BASE_URL + "user/update/",
+      UPDATE_PASSWD = _BASE_URL + "user/change-password/",
+      RESET_PASSWD = _BASE_URL + "forgot-password",
+      FB_LOGIN = "social-login",
+      GET_NOTIFICATIONS = _BASE_URL + "user/notification",
+      DELETE_PRODUCT = _BASE_URL + "post/delete/",
+      BUYERS_LIST = _BASE_URL + "post/chat/user/",
+      RATE = _BASE_URL + "post/sold/",
       REPORT = _BASE_URL + "post/report";
 
   final dio = Dio()..options = BaseOptions(headers: AppData.Headers);

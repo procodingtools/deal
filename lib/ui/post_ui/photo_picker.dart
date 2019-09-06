@@ -99,7 +99,6 @@ class _PhotoPickerState extends State<PhotoPickerScreen> {
       onTap: () {
         if (_selectedPhotosContains(asset))
           setState(() {
-            print("found");
             _removeSelectedPhoto(asset);
             widget.onPhotosSectectedChaned(_selectedPhotos);
           });

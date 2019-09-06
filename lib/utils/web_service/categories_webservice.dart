@@ -1,6 +1,5 @@
 import 'package:deal/entities/category.dart';
 import 'package:deal/utils/web_service/webservice_config.dart';
-import 'package:dio/dio.dart';
 
 class CategoriesWebService extends WebserviceConfig{
   Future<List<CategoryEntity>> getCategories() async {
@@ -11,7 +10,6 @@ class CategoriesWebService extends WebserviceConfig{
       for (final cat in data) categories.add(CategoryEntity(data: cat));
       return categories;
     } catch (e) {
-      print(e);
       return null;
     }
   }

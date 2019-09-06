@@ -39,7 +39,7 @@ class ProductDetailsEntity {
     _lat = data['latitude'] ?? null;
     _lng = data['longitude'] ?? null;
     _country = data['country'] ?? null;
-    _state = data['sstate'] ?? null;
+    _state = data['state'] ?? null;
     _city = data['city'] ?? null;
     _created = DateTime.parse(data['created_at'] ?? DateTime.now().toString());
     _updated = DateTime.parse(data['updated_at'] ?? DateTime.now().toString());

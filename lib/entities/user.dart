@@ -20,6 +20,7 @@ class UserEntity {
   String _longitude = "";
   String _token = "";
   List<String> _searchHistory = new List();
+  String _fromJson;
 
   UserEntity({Map<String, dynamic> data}) {
     if (data != null) {
@@ -36,7 +37,7 @@ class UserEntity {
       //_searchHistory = data['search_history'];
       if (data.containsKey("token")) {
         _token = "Bearer " + data['token'];
-        AppData.Toekn = _token;
+        AppData.Token = _token;
       }
     }
   }
@@ -46,7 +47,12 @@ class UserEntity {
         _name = data['name']??null,
         _email = data['email']??null,
         _thumb = data['profile_thumb']??null,
-        _rating = data.containsKey("ratting") ? data['ratting'] + .0 : .0;
+        _token = data['token'],
+        _rating = data.containsKey("ratting") ? data['ratting'] + .0 : .0,
+        _profilePicThumb = data['profile_thumb']??null,
+        _profilePicOriginal = data['profile']??null;
+
+
 
   String toJson(){
     Map<String, dynamic> data = Map();
@@ -59,7 +65,7 @@ class UserEntity {
     data['profile'] = _profilePicOriginal;
     data['ratting'] = _rating;
     data['token'] = _token;
-    AppData.Toekn = _token;
+    //AppData.Token = _token;
     return json.encode(data);
   }
 

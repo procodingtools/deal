@@ -15,7 +15,7 @@ class ReportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = Dimens.Width, _height = Dimens.Height;
+    final _width = Dimens.Width, _height = Dimens.Height;
     final List<String> reasons = [
       "It's prohibited on Deals",
       "It's offensive to me",
@@ -41,7 +41,7 @@ class ReportScreen extends StatelessWidget {
                     flexibleSpace: FlexibleSpaceBar(
                       collapseMode: CollapseMode.parallax,
                       background: Container(
-                        width: width,
+                        width: _width,
                         child: Text(
                           "SliverFab Example",
                           style: TextStyle(fontSize: 17.0, color: Colors.white),
@@ -53,7 +53,7 @@ class ReportScreen extends StatelessWidget {
                     delegate: new SliverChildListDelegate(<Widget>[
                       Padding(
                           padding: EdgeInsets.symmetric(
-                              vertical: width * .2, horizontal: 8.0),
+                              vertical: _width * .2, horizontal: 8.0),
                           child: Column(
                             mainAxisSize: MainAxisSize.max,
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +75,7 @@ class ReportScreen extends StatelessWidget {
                                     ),
                                     Padding(
                                       padding:
-                                          EdgeInsets.only(bottom: width*.15),
+                                          EdgeInsets.only(bottom: _width*.15),
                                       child: Text(details.user.name),
                                     ),
                                   ],
@@ -111,8 +111,8 @@ class ReportScreen extends StatelessWidget {
                   ),
                 ],
                 floatingWidget: Container(
-                  width: width * .4,
-                  height: width * .4,
+                  width: _width * .4,
+                  height: _width * .4,
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10.0),
                       border: Border.all(
@@ -131,17 +131,17 @@ class ReportScreen extends StatelessWidget {
                       placeholder: Image.asset(
                         "assets/icon_no_image.png",
                       ),
-                      width: width * .2,
-                      height: width * .2,
+                      width: _width * .2,
+                      height: _width * .2,
                       fit: BoxFit.cover,
                     ),
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
                 floatingPosition: FloatingPosition(
-                    top: -width * .1,
-                    left: (width / 2) - width * .2,
-                    right: (width / 2) - width * .2),
+                    top: -_width * .1,
+                    left: (_width / 2) - _width * .2,
+                    right: (_width / 2) - _width * .2),
               )),
     );
   }

@@ -30,8 +30,8 @@ class DetailsProfileCard extends StatelessWidget {
     // TODO: implement build
 
     return InkWell(
-      onTap: () => Navigator.push(
-          context, MaterialPageRoute(builder: (context) => navigateTo)),
+      onTap: () => navigateTo != null ? Navigator.push(
+          context, MaterialPageRoute(builder: (context) => navigateTo)) : null,
       child: Stack(
         children: <Widget>[
           Align(

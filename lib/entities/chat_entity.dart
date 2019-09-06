@@ -1,4 +1,3 @@
-import 'package:deal/entities/category.dart';
 import 'package:deal/entities/product_details.dart';
 import 'package:deal/entities/user.dart';
 

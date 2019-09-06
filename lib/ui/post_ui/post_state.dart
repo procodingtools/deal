@@ -18,8 +18,9 @@ import 'package:path_provider/path_provider.dart';
 
 class PostScreen extends StatefulWidget {
   final ProductDetailsEntity details;
+  final Function onProductAdded;
 
-  const PostScreen({Key key, this.details}) : super(key: key);
+  const PostScreen({Key key, this.details, this.onProductAdded}) : super(key: key);
 
   createState() => _PostState();
 }
@@ -37,9 +38,40 @@ class _PostState extends State<PostScreen> {
   double _lat, _lng;
   CategoryEntity _cat, _subCat;
 
+  TextEditingController _titleController, _descriptionController, _priceController;
+
   bool _isUploading = false;
 
   List<Map<String, dynamic>> _photos = List();
+
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _country = "Country";
+    _state = "State";
+    _city = "City";
+    _location = "Location";
+    _titleController = TextEditingController();
+    _descriptionController = TextEditingController();
+    _priceController = TextEditingController();
+
+    if (widget.details != null) {
+      _country = widget.details.country;
+      _city = widget.details.city;
+      _state = widget.details.state;
+      _titleController.text = widget.details.title;
+      _descriptionController.text = widget.details.desc;
+      _priceController.text = widget.details.price;
+
+      getTemporaryDirectory().then((dir) {
+        String tmpDir = dir.path;
+        _fetchPhotos(tmpDir);
+      });
+    }
+  }
 
   _setOnCategoryListener(CategoryEntity category, CategoryEntity subCat) =>
       setState(() {
@@ -61,45 +93,22 @@ class _PostState extends State<PostScreen> {
   }
 
   _setOnPhotosListener(List<Map<String, dynamic>> photos) {
-    _photos
-      ..clear()
-      ..addAll(photos);
+    setState(() {
+      _photos
+        ..clear()
+        ..addAll(photos);
+    });
   }
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _country = "Country";
-    _state = "State";
-    _city = "City";
-    _location = "Location";
-
-    if (widget.details != null) {
-      _country = widget.details.country;
-      _city = widget.details.city;
-      _state = widget.details.state;
-
-      getTemporaryDirectory().then((dir) {
-        String tmpDir = dir.path;
-        _fetchPhotos(tmpDir);
-      });
-  }
-}
 
 _fetchPhotos(String tmpDir) async {
   for(final img in widget.details.images) {
-    print('entred');
     String path = "$tmpDir/${img.thumb.substring(img.thumb.lastIndexOf('/') + 1)}";
     final request = await HttpClient().getUrl(Uri.parse(img.thumb));
     final response = await request.close();
     await response.pipe(new File(path).openWrite());
     _photos.add({'path': path});
-    print("added");
   };
-  print('all added');
   setState(() {
-    print('allAdded');
   });
 }
 
@@ -131,6 +140,7 @@ Widget build(BuildContext context) {
                   Padding(
                     padding: const EdgeInsets.only(top: 20.0),
                     child: TextFormField(
+                      controller: _titleController,
                       decoration: Values.TextFieldDecoration('Title'),
                       focusNode: _titleFocusNode,
                       textInputAction: TextInputAction.next,
@@ -152,6 +162,7 @@ Widget build(BuildContext context) {
                   Padding(
                     padding: const EdgeInsets.only(top: 10.0),
                     child: TextFormField(
+                      controller: _descriptionController,
                       decoration: Values.TextFieldDecoration("Description"),
                       focusNode: _descFocusNode,
                       textInputAction: TextInputAction.next,
@@ -173,6 +184,7 @@ Widget build(BuildContext context) {
                   Padding(
                     padding: const EdgeInsets.only(top: 10.0),
                     child: TextFormField(
+                      controller: _priceController,
                       decoration: Values.TextFieldDecoration("Price"),
                       keyboardType:
                       TextInputType.numberWithOptions(signed: false),
@@ -310,16 +322,19 @@ Widget _postBtn() {
             ..img = photo['path'];
         }).toList();
         product.price = _price;
-        product.lat = AppData.Latitude;
-        product.lng = AppData.Longitude;
+        product.lat = _lat.toString();
+        product.lng = _lng.toString();
         product.location = _location;
         product.city = _city == 'City' ? "" : _city;
         product.country = _country == 'Country' ? "" : _country;
         product.state = _state == "State" ? "" : _country;
 
         ProductWebService().postProduct(product).then((val) {
+          print(val);
           setState(() {
             _isUploading = false;
+            if (widget.onProductAdded != null)
+              widget.onProductAdded();
             Navigator.pop(context);
           });
         });

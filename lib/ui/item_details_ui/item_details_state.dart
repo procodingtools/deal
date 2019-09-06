@@ -3,12 +3,14 @@ import 'package:date_format/date_format.dart';
 import 'package:deal/entities/image.dart';
 import 'package:deal/entities/product.dart';
 import 'package:deal/entities/product_details.dart';
+import 'package:deal/ui/chat_ui/chat_screen/chat_state.dart';
+import 'package:deal/ui/common/profile_card.dart';
 import 'package:deal/ui/common/shimmer_text.dart';
 import 'package:deal/ui/dialogs/auth/auth_dialog.dart';
 import 'package:deal/ui/item_details_ui/details_buttons.dart';
-import 'package:deal/ui/common/profile_card.dart';
 import 'package:deal/ui/item_details_ui/flex_bar.dart';
 import 'package:deal/ui/post_ui/post_state.dart';
+import 'package:deal/ui/profile_ui/profile_state.dart';
 import 'package:deal/ui/report_ui/report_state.dart';
 import 'package:deal/utils/appdata.dart';
 import 'package:deal/utils/dimens.dart';
@@ -21,10 +23,11 @@ import 'package:sliver_fab/sliver_fab.dart';
 
 class ItemDetailsScreen extends StatefulWidget {
   final ProductEntity product;
+  final Function(bool) onSaveChanged;
 
   const ItemDetailsScreen({
     Key key,
-    this.product,
+    this.product, this.onSaveChanged,
   }) : super(key: key);
 
   createState() => _ItemDetailsState();
@@ -51,7 +54,7 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _isMine = widget.product.userId == AppData.User?.id ?? 0;
+    _isMine = false;
     _images = [
       ImageEntity.formJson({
         "id": 0,
@@ -71,6 +74,7 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
     ProductWebService().getProductDetails(widget.product.id).then((details) {
       setState(() {
         _details = details;
+        _isMine = details.user.id == AppData.User?.id ?? 0;
         _details.images.removeAt(0);
         _images.addAll(_details.images);
         _isLoading = false;
@@ -145,6 +149,8 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
         _details.isFav = !_details.isFav;
       });
       ProductWebService().saveProduct(_details.id);
+      if (widget.onSaveChanged != null)
+        widget.onSaveChanged(_details.isFav);
       _initBottomButtons();
     }
   }
@@ -155,7 +161,7 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
     return Scaffold(
         body: SliverFab(
       expandedHeight: _height * .45,
-      floatingWidget: !_isMine
+      floatingWidget: !_isMine && !(_details?.isSold??true)
           ? FloatingActionButton(
               backgroundColor: Values.primaryColor,
               onPressed: () {
@@ -166,7 +172,7 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
                             loginStatus: (status) => print(status),
                           ));
                 } else
-                  print("hello");
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ChatScreen(user: _details.user, product: _details)));
               },
               child: Icon(
                 FontAwesomeIcons.solidCommentAlt,
@@ -265,6 +271,7 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
                         child: DetailsProfileCard(
                           isLoading: _isLoading,
                           user: _details?.user,
+                          navigateTo: AppData.User != null ? ProfileScreen(user: _details?.user,) : null,
                         )),
                   ),
                   Padding(
@@ -300,7 +307,7 @@ class _ItemDetailsState extends State<ItemDetailsScreen> {
       children: <Widget>[
         !_isLoading
             ? Text(
-                "${_details.cat.label} > ${_details.subCat.label}",
+                "${_details.cat.label} ${_details.subCat.label != null ? "> " + _details.subCat.label : ""}",
                 style: TextStyle(color: Values.primaryColor),
               )
             : ShimmerText(

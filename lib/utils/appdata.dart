@@ -5,7 +5,8 @@ import 'package:deal/entities/user.dart';
 
 class AppData{
   static List<CategoryEntity> Categories;
-  static String Toekn;
+  static String Token;
+  static String FCM;
   static String Latitude = "", Longitude = "";
   static final String XMPP_DOMAIN_ID_APPEND = "@18.191.222.43";
   static UserEntity User;

@@ -3,8 +3,10 @@ import 'dart:math';
 import 'package:deal/entities/product.dart';
 import 'package:deal/ui/common/shimmer_text.dart';
 import 'package:deal/ui/item_details_ui/item_details_state.dart';
+import 'package:deal/utils/appdata.dart';
 import 'package:deal/utils/dimens.dart';
 import 'package:deal/utils/values.dart';
+import 'package:deal/utils/web_service/products_webservice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_advanced_networkimage/provider.dart';
 import 'package:flutter_advanced_networkimage/transition.dart';
@@ -14,8 +16,16 @@ import 'package:shimmer/shimmer.dart';
 class ItemCard extends StatelessWidget {
   final bool isLoading;
   final ProductEntity product;
+  final Function(bool) onSaveChanged;
+  final Function() showLoginDialog;
 
-  const ItemCard({Key key, this.isLoading, this.product}) : super(key: key);
+  ItemCard(
+      {Key key,
+      this.isLoading,
+      this.product,
+      this.onSaveChanged,
+      this.showLoginDialog})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +36,9 @@ class ItemCard extends StatelessWidget {
           Navigator.of(context).push(MaterialPageRoute(
               builder: (context) => ItemDetailsScreen(
                     product: product,
+                    onSaveChanged: (isSaved) {
+                      if (onSaveChanged != null) onSaveChanged(isSaved);
+                    },
                   )));
       },
       child: Card(
@@ -83,9 +96,21 @@ class ItemCard extends StatelessWidget {
                     ),
                     Expanded(child: Container()),
                     !isLoading
-                        ? Icon(
-                            FontAwesomeIcons.heart,
-                            color: Colors.pink,
+                        ? InkWell(
+                            onTap: () {
+                              if (AppData.User != null) {
+                                ProductWebService().saveProduct(product.id);
+                                if (onSaveChanged != null)
+                                  onSaveChanged(!product.isFav);
+                              } else if (showLoginDialog != null)
+                                showLoginDialog();
+                            },
+                            child: Icon(
+                              product.isFav
+                                  ? FontAwesomeIcons.solidHeart
+                                  : FontAwesomeIcons.heart,
+                              color: Colors.pink,
+                            ),
                           )
                         : Shimmer.fromColors(
                             child: Icon(
@@ -112,19 +137,23 @@ class ItemCard extends StatelessWidget {
                 image: AdvancedNetworkImage(product.thumb,
                     useDiskCache: true,
                     cacheRule: CacheRule(maxAge: Duration(days: 10))),
-                placeholder: Image.asset(
-                  "assets/test.jpg",
-                  fit: BoxFit.cover,
+                placeholder: Container(
+                  height: 100.0 + Random().nextDouble(),
+                  child: Image.asset(
+                    "assets/icon_no_image.png",
+                    fit: BoxFit.cover,
+                    width: 500.0,
+                    height: 500.0,
+                  ),
                 ),
                 loadingWidget: Container(
                   height: 100.0 + Random().nextDouble(),
-                  child: Shimmer.fromColors(
-                      child: Container(
-                        color: Colors.grey,
-                        height: 70.0 + Random().nextDouble(),
-                      ),
-                      baseColor: Colors.grey.withOpacity(.4),
-                      highlightColor: Colors.white),
+                  child: Image.asset(
+                    "assets/icon_no_image.png",
+                    fit: BoxFit.cover,
+                    width: 500.0,
+                    height: 500.0,
+                  ),
                 ),
                 repeat: ImageRepeat.noRepeat,
                 //borderRadius: BorderRadius.circular(500.0),

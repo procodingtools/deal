@@ -1,8 +1,12 @@
+import 'package:deal/ui/auth_ui/reset_passwd_form.dart';
 import 'package:deal/utils/appdata.dart';
 import 'package:deal/utils/values.dart';
 import 'package:deal/utils/web_service/user_webservice.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class SigninForm extends StatefulWidget {
@@ -82,12 +86,17 @@ class _SigninForm extends State<SigninForm> {
                   focusedBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey))),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: widget.width*.1, vertical: widget.height*.05),
+            Material(
               child: Align(
                 alignment: Alignment.centerRight,
-                child: Text("Forgot password?", style: TextStyle(color: Colors.grey),),
-              )
+                child: InkWell(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => ResetPasswordForm())),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: widget.width*.1, vertical: widget.height*.05),
+                    child: Text("Forgot password?", style: TextStyle(color: Colors.grey),),
+                  ),
+                ),
+              ),
             ),
 
             Padding(
@@ -100,13 +109,14 @@ class _SigninForm extends State<SigninForm> {
                     if(_formKey.currentState.validate()){
                       _showLoggingInDialog();
                       _formKey.currentState.save();
-                      UserWebService()..login(_mail, _passwd).then((user){
+                      UserWebService().login(_mail, _passwd).then((user) async {
                         _isSigning = false;
                         Navigator.of(context).pop();
                         if (user != null){
                           AppData.User = user;
                           AppData.Headers['Authorization'] = AppData.User.token;
-
+                          final sp = await SharedPreferences.getInstance();
+                          await sp.setString("user", user.toJson());
                           widget.result("Your login credential not work", true);
                         }else
                           widget.result("Your login credential not work", false);
@@ -126,7 +136,7 @@ class _SigninForm extends State<SigninForm> {
               height: widget.height*.1,
               child: RaisedButton(
                 elevation: 5.0,
-                onPressed: () => print('hello'),
+                onPressed: () => _fbLogin(),
                 textColor: Colors.white,
                 color: Values.fbColor,
                 child: Row(
@@ -174,5 +184,26 @@ class _SigninForm extends State<SigninForm> {
         ),
       );
     });
+  }
+
+  _fbLogin() async {
+    final fbLogin = FacebookLogin();
+    final result = await fbLogin.logInWithReadPermissions(['email', 'public_profie', 'user_photos']);
+    switch(result.status){
+      case FacebookLoginStatus.loggedIn:
+        FacebookAccessToken token = result.accessToken;
+        AuthCredential cred = await FacebookAuthProvider.getCredential(accessToken: token.token);
+        final user = await FirebaseAuth.instance.signInWithCredential(cred);
+        final usr = await UserWebService().signinFacebook(user.user, token);
+        AppData.User = usr;
+        AppData.Token = usr.token;
+        break;
+      case FacebookLoginStatus.cancelledByUser:
+        // TODO: Handle this case.
+        break;
+      case FacebookLoginStatus.error:
+        // TODO: Handle this case.
+        break;
+    }
   }
 }

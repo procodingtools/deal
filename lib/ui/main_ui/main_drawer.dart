@@ -3,8 +3,8 @@ import 'package:deal/ui/about_ui/about_state.dart';
 import 'package:deal/ui/auth_ui/auth_state.dart';
 import 'package:deal/ui/categories_ui/categories_state.dart';
 import 'package:deal/ui/chat_ui/chat_list/chat_list_state.dart';
-import 'package:deal/ui/chat_ui/chat_screen/chat_state.dart';
 import 'package:deal/ui/dialogs/auth/auth_dialog.dart';
+import 'package:deal/ui/main_ui/main_state.dart';
 import 'package:deal/ui/post_ui/post_state.dart';
 import 'package:deal/ui/profile_ui/profile_state.dart';
 import 'package:deal/utils/appdata.dart';
@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_advanced_networkimage/provider.dart';
 import 'package:flutter_advanced_networkimage/transition.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MainDrawer extends StatelessWidget {
   final Function(CategoryEntity category, CategoryEntity subCat)
@@ -167,13 +168,14 @@ class MainDrawer extends StatelessWidget {
                   : "assets/icon_log_out.png",
               width: 25.0,
             ),
-            onTap: () {
+            onTap: () async {
               if (AppData.User != null) {
                 AppData.User = null;
-                AppData.Toekn = null;
+                AppData.Token = null;
+                await SharedPreferences.getInstance()..remove("user");
               }
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => AuthScreen()));
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => AuthScreen(route: MainScreen(),)));
             },
           ),
         ],

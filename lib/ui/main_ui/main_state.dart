@@ -1,11 +1,11 @@
 import 'package:deal/entities/category.dart';
 import 'package:deal/entities/product.dart';
-import 'package:deal/ui/auth_ui/auth_state.dart';
+import 'package:deal/ui/common/post_product_card.dart';
 import 'package:deal/ui/dialogs/auth/auth_dialog.dart';
 import 'package:deal/ui/dialogs/settings/settings_dialog.dart';
 import 'package:deal/ui/main_ui/item_card.dart';
 import 'package:deal/ui/main_ui/main_drawer.dart';
-import 'package:deal/ui/post_ui/post_state.dart';
+import 'package:deal/ui/notifications_ui/notifications_screen.dart';
 import 'package:deal/utils/appdata.dart';
 import 'package:deal/utils/dimens.dart';
 import 'package:deal/utils/values.dart';
@@ -154,23 +154,15 @@ class _MainState extends State<MainScreen> with TickerProviderStateMixin {
       Padding(
         padding: const EdgeInsets.only(right: 8.0),
         child: InkWell(
-            onTap: () => showDialog(
-                context: context,
-                builder: (context) => AuthDialog(
-                      loginStatus: (status) {
-                        if (status)
-                          setState(() {
-                            _isLoading = true;
-                            _products.clear();
-                            ProductWebService().getPosts().then((list) {
-                              setState(() {
-                                _products.addAll(list);
-                                _isLoading = false;
-                              });
-                            });
-                          });
-                      },
-                    )),
+            onTap: () {
+              if (AppData.User == null)
+                _showLoginDialog();
+              else
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => NotificationsScreen()));
+            },
             child: Icon(Icons.notifications_none)),
       ),
       Padding(
@@ -322,6 +314,8 @@ class _MainState extends State<MainScreen> with TickerProviderStateMixin {
           child: ItemCard(
             isLoading: _isLoading,
             product: product,
+            onSaveChanged: (isSeved) => setState(() => product.isFav = isSeved),
+            showLoginDialog: () => _showLoginDialog(),
           ),
         );
       },
@@ -353,7 +347,21 @@ class _MainState extends State<MainScreen> with TickerProviderStateMixin {
                       .0, 255 - (255 * _animation.value), .0),
                   child: Opacity(
                     opacity: _animation.value,
-                    child: _postProductCard(),
+                    child: PostProductCard(
+                      onAuthDialog: (status) {
+                        if (status)
+                          setState(() {
+                            _isLoading = true;
+                            _products.clear();
+                            ProductWebService().getPosts().then((list) {
+                              setState(() {
+                                _products.addAll(list);
+                                _isLoading = false;
+                              });
+                            });
+                          });
+                      },
+                    ),
                   ),
                 ),
               )
@@ -376,72 +384,18 @@ class _MainState extends State<MainScreen> with TickerProviderStateMixin {
           child: Padding(
             padding: const EdgeInsets.all(15.0),
             child: RichText(
-              overflow: TextOverflow.clip,
-                text: TextSpan(text: "Deals near ", style: TextStyle(color: Colors.black), children: [
-              TextSpan(
-                  text: "${_location?.city ?? "you"}",
-                  style: TextStyle(
-                      color: _location?.city != null
-                          ? Values.primaryColor
-                          : Colors.black))
-            ])),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _postProductCard() {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 15.0),
-      child: Card(
-        elevation: 5.0,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(50.0)),
-        color: Values.primaryColor,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(50.0),
-          child: MaterialButton(
-            splashColor: Colors.white54,
-            onPressed: () => showDialog(
-                context: context,
-                builder: (context) {
-                  return AppData.User != null
-                      ? PostScreen()
-                      : AuthDialog(loginStatus: (status) {
-                          if (status)
-                            setState(() {
-                              _isLoading = true;
-                              _products.clear();
-                              ProductWebService().getPosts().then((list) {
-                                setState(() {
-                                  _products.addAll(list);
-                                  _isLoading = false;
-                                });
-                              });
-                            });
-                        });
-                }),
-            child: Padding(
-                padding: EdgeInsets.all(15.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Icon(
-                      Icons.add_a_photo,
-                      color: Colors.white,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(left: 10.0),
-                      child: Text(
-                        "Sell your stuff",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    )
-                  ],
-                )),
+                overflow: TextOverflow.clip,
+                text: TextSpan(
+                    text: "Deals near ",
+                    style: TextStyle(color: Colors.black),
+                    children: [
+                      TextSpan(
+                          text: "${_location?.city ?? "you"}",
+                          style: TextStyle(
+                              color: _location?.city != null
+                                  ? Values.primaryColor
+                                  : Colors.black))
+                    ])),
           ),
         ),
       ),
@@ -496,5 +450,25 @@ class _MainState extends State<MainScreen> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  void _showLoginDialog() {
+    showDialog(
+        context: context,
+        builder: (context) => AuthDialog(
+          loginStatus: (status) {
+            if (status)
+              setState(() {
+                _isLoading = true;
+                _products.clear();
+                ProductWebService().getPosts().then((list) {
+                  setState(() {
+                    _products.addAll(list);
+                    _isLoading = false;
+                  });
+                });
+              });
+          },
+        ));
   }
 }
